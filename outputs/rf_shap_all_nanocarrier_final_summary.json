@@ -1,0 +1,104 @@
+{
+  "model_type": "RandomForestRegressor + SHAP TreeExplainer",
+  "data_file": "data\\all_nanocarrier_release_dataset.csv",
+  "model_file": "models\\rf_shap_all_nanocarrier_final_model.joblib",
+  "metrics": {
+    "rows": 1481,
+    "curves": 156,
+    "papers": 36,
+    "group_cv_rmse": 15.248280715442135,
+    "group_cv_mae": 11.037246621444819,
+    "group_cv_r2": 0.7241398625001794
+  },
+  "oob_score": 0.9006971416950581,
+  "global_shap_top20": [
+    {
+      "feature": "log_time_h",
+      "mean_abs_shap": 4.9124649788270585
+    },
+    {
+      "feature": "sqrt_time_h",
+      "mean_abs_shap": 4.900449375757835
+    },
+    {
+      "feature": "time_h",
+      "mean_abs_shap": 4.721322286676162
+    },
+    {
+      "feature": "encapsulation_efficiency_percent",
+      "mean_abs_shap": 2.387897810884538
+    },
+    {
+      "feature": "zeta_stability_abs_mv",
+      "mean_abs_shap": 2.34159015393864
+    },
+    {
+      "feature": "acidic_trigger_7_4",
+      "mean_abs_shap": 2.1375583068355635
+    },
+    {
+      "feature": "ph",
+      "mean_abs_shap": 2.133817696185481
+    },
+    {
+      "feature": "surface_area_proxy_inv_nm",
+      "mean_abs_shap": 1.9621092475097106
+    },
+    {
+      "feature": "particle_size_nm",
+      "mean_abs_shap": 1.8914299225293263
+    },
+    {
+      "feature": "loading_gradient_proxy",
+      "mean_abs_shap": 1.1756061825840411
+    },
+    {
+      "feature": "drug_loading_content_percent",
+      "mean_abs_shap": 1.0923828469892953
+    },
+    {
+      "feature": "zeta_potential_mv",
+      "mean_abs_shap": 1.05868306663984
+    },
+    {
+      "feature": "carrier_type_liposome",
+      "mean_abs_shap": 1.0430021852147833
+    },
+    {
+      "feature": "carrier_type_free drug solution",
+      "mean_abs_shap": 0.713019506346274
+    },
+    {
+      "feature": "pdi",
+      "mean_abs_shap": 0.6229126696439784
+    },
+    {
+      "feature": "drug_name_carvacrol",
+      "mean_abs_shap": 0.5596468149495798
+    },
+    {
+      "feature": "drug_name_Paclitaxel",
+      "mean_abs_shap": 0.3234866761708992
+    },
+    {
+      "feature": "drug_name_Cytarabine",
+      "mean_abs_shap": 0.26331556295392616
+    },
+    {
+      "feature": "release_medium_PBS",
+      "mean_abs_shap": 0.25282957122041794
+    },
+    {
+      "feature": "carrier_family_chitosan",
+      "mean_abs_shap": 0.23040798815565147
+    }
+  ],
+  "theory_notes": {
+    "noyes_whitney": "dM/dt = D*A*(Cs-C)/h: release rate is controlled by diffusion, exposed area, and concentration driving force.",
+    "higuchi": "Mt = kH*sqrt(t): diffusion-controlled cumulative release often scales with square-root time.",
+    "korsmeyer_peppas": "Mt/Minf = k*t^n: n helps flag whether simple Fickian diffusion is plausible or swelling/erosion/relaxation may contribute.",
+    "surface_area_proxy_inv_nm": "For spherical particles at comparable mass, smaller diameter implies larger specific surface area, approximated here by 1/diameter.",
+    "ph": "pH changes ionization/solubility and pH-sensitive carrier destabilization, altering the Noyes-Whitney driving force.",
+    "zeta_potential": "Higher absolute zeta potential implies stronger electrostatic stabilization and less aggregation, preserving effective surface area."
+  }
+}
