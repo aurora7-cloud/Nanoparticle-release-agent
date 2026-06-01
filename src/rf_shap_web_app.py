@@ -207,6 +207,38 @@ HTML = r"""<!doctype html>
       font-size: 13px;
       line-height: 1.45;
     }
+    .interpretation-intro {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+      font-size: 13px;
+    }
+    .mini-title {
+      color: #4f5d66;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .theory-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #34444d;
+      background: #fbfcfc;
+      font-size: 13px;
+    }
+    .theory-box summary {
+      cursor: pointer;
+      font-weight: 800;
+      color: #1f2b32;
+    }
+    .theory-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      line-height: 1.5;
+    }
     .warning {
       margin-top: 10px;
       background: var(--warn);
@@ -217,17 +249,6 @@ HTML = r"""<!doctype html>
       font-size: 12px;
       line-height: 1.45;
     }
-    .domain-alert {
-      display: none;
-      border: 1px solid #e7b36f;
-      background: #fff1d9;
-      color: #6f4610;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    .domain-alert.show { display: block; }
     .compare-list {
       margin-top: 12px;
       display: grid;
@@ -454,7 +475,6 @@ HTML = r"""<!doctype html>
         <div class="metric"><span>Reliability</span><strong id="rel">-</strong></div>
         <div class="metric"><span>KP n Estimate</span><strong id="kp">-</strong></div>
       </section>
-      <div id="domainAlert" class="domain-alert"></div>
 
       <section class="workspace">
         <div class="panel">
@@ -481,12 +501,12 @@ HTML = r"""<!doctype html>
 
       <section class="workspace">
         <div class="panel">
-          <div class="panel-head"><h3>AI Interpretation</h3></div>
+          <div class="panel-head"><h3>Model Interpretation</h3></div>
           <div class="analysis" id="analysis"></div>
           <div style="margin-top: 14px;">
-            <label for="question" style="display:block;color:#66727b;margin-bottom:6px;">Ask about this condition</label>
+            <label for="question" style="display:block;color:#66727b;margin-bottom:6px;">Ask about this prediction</label>
             <textarea id="question" placeholder="Example: What should I change to increase release percentage?"></textarea>
-            <button id="ask" class="run" style="margin-top:10px;width:100%;" type="button">Ask Model</button>
+            <button id="ask" class="run" style="margin-top:10px;width:100%;" type="button">Ask About Prediction</button>
             <div class="analysis" id="answer" style="margin-top:10px;"></div>
           </div>
           <div id="warnings"></div>
@@ -681,24 +701,32 @@ HTML = r"""<!doctype html>
       }).join("");
     }
 
-    function renderAnalysis(lines, warnings) {
-      $("analysis").innerHTML = lines.map((line) => `<div class="note">${line}</div>`).join("");
+    function renderAnalysis(sections, warnings) {
+      const modelNotes = sections.modelNotes || [];
+      const mechanismHints = sections.mechanismHints || [];
+      const noteHtml = modelNotes.length
+        ? `<div class="mini-title">Model notes</div>${modelNotes.map((line) => `<div class="note">${line}</div>`).join("")}`
+        : "";
+      const hintHtml = mechanismHints.length
+        ? `<div class="mini-title">Mechanism hints</div>${mechanismHints.map((line) => `<div class="note">${line}</div>`).join("")}`
+        : "";
+      $("analysis").innerHTML = `
+        <p class="interpretation-intro">This panel summarizes RF/SHAP drivers and release-theory hints for the current prediction. It supports interpretation, but does not replace experimental validation.</p>
+        ${noteHtml}
+        ${hintHtml}
+        <details class="theory-box">
+          <summary>Theory reference</summary>
+          <ul class="theory-list">
+            <li><strong>Noyes-Whitney:</strong> diffusion rate depends on exposed area and concentration driving force.</li>
+            <li><strong>Higuchi:</strong> cumulative release can scale with square-root time in diffusion-controlled systems.</li>
+            <li><strong>Korsmeyer-Peppas:</strong> the exponent n gives a hint about Fickian diffusion or anomalous transport.</li>
+            <li><strong>SHAP local drivers:</strong> positive values raise the prediction; negative values lower it for this input.</li>
+          </ul>
+        </details>
+      `;
       $("warnings").innerHTML = warnings.length
         ? `<div class="warning">${warnings.map((line) => `<div>${line}</div>`).join("")}</div>`
         : "";
-    }
-
-    function renderDomainAlert(focus) {
-      const warnings = focus.warnings || [];
-      const isSoft = focus.reliability === "medium" || focus.reliability === "low";
-      if (!warnings.length && !isSoft) {
-        $("domainAlert").className = "domain-alert";
-        $("domainAlert").textContent = "";
-        return;
-      }
-      $("domainAlert").className = "domain-alert show";
-      const warningText = warnings.length ? warnings.join(" ") : "Nearest training evidence is not very close.";
-      $("domainAlert").textContent = `${focus.reliability_reason || `Check reliability: ${focus.reliability}.`} ${warningText}`;
     }
 
     function renderFreeSummary() {
@@ -841,8 +869,13 @@ HTML = r"""<!doctype html>
         const reliabilityNote = focus.reliability_reason ? [focus.reliability_reason] : [];
         const evidenceNote = curve.message ? [curve.message] : [];
         const freeNote = $("freeRef").checked && freeCurve.message ? [freeCurve.message] : [];
-        renderAnalysis([...reliabilityNote, ...evidenceNote, ...focus.interpretation, ...freeNote], focus.warnings);
-        renderDomainAlert(focus);
+        renderAnalysis(
+          {
+            modelNotes: [...reliabilityNote, ...evidenceNote, ...freeNote],
+            mechanismHints: focus.interpretation
+          },
+          focus.warnings
+        );
         renderNeighbors(focus.nearest_rows);
         $("status").textContent = "Updated";
       } catch (error) {
