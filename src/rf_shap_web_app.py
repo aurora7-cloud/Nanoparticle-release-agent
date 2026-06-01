@@ -119,6 +119,7 @@ HTML = r"""<!doctype html>
       box-shadow: 0 0 0 3px rgba(118, 212, 197, 0.15);
     }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-2 .field:only-child { grid-column: 1 / -1; }
     .run {
       margin-top: 8px;
       border: 0;
@@ -430,10 +431,6 @@ HTML = r"""<!doctype html>
       </div>
       <div class="grid-2">
         <div class="field">
-          <label for="temp">Temperature C</label>
-          <input id="temp" type="number" value="37" step="0.1" min="0" max="100" />
-        </div>
-        <div class="field">
           <label for="time">Focus time h</label>
           <input id="time" type="number" value="24" step="1" min="0" max="10000" />
         </div>
@@ -503,12 +500,6 @@ HTML = r"""<!doctype html>
         <div class="panel">
           <div class="panel-head"><h3>Model Interpretation</h3></div>
           <div class="analysis" id="analysis"></div>
-          <div style="margin-top: 14px;">
-            <label for="question" style="display:block;color:#66727b;margin-bottom:6px;">Ask about this prediction</label>
-            <textarea id="question" placeholder="Example: What should I change to increase release percentage?"></textarea>
-            <button id="ask" class="run" style="margin-top:10px;width:100%;" type="button">Ask About Prediction</button>
-            <div class="analysis" id="answer" style="margin-top:10px;"></div>
-          </div>
           <div id="warnings"></div>
         </div>
         <div class="panel">
@@ -541,7 +532,6 @@ HTML = r"""<!doctype html>
       zeta: [-250, 250, "Zeta potential must be between -250 and 250 mV."],
       pdi: [0, 20, "PDI cannot be negative. This app allows 0-20 because some papers report PDI-like values as percent."],
       ph: [0, 14, "pH must be between 0 and 14."],
-      temp: [0, 100, "Temperature must be between 0 and 100 C."],
       time: [0, 10000, "Time cannot be negative or above 10000 h."],
       loading: [0, 100, "Drug loading percent must be 0-100."],
       ee: [0, 100, "Encapsulation efficiency percent must be 0-100."]
@@ -568,7 +558,7 @@ HTML = r"""<!doctype html>
         zeta_potential_mv: num("zeta"),
         pdi: num("pdi"),
         ph: num("ph"),
-        temperature_C: num("temp"),
+        temperature_C: 37,
         time_h: timeOverride === null ? num("time") : timeOverride,
         drug_loading_content_percent: num("loading"),
         encapsulation_efficiency_percent: num("ee")
@@ -959,24 +949,6 @@ HTML = r"""<!doctype html>
       image.src = svgUrl;
     }
 
-    async function askModel() {
-      if (!validateInputs()) return;
-      const question = $("question").value.trim();
-      if (!question) {
-        $("answer").innerHTML = `<div class="note">Type a question about the current condition first.</div>`;
-        return;
-      }
-      $("ask").disabled = true;
-      try {
-        const response = await postJson("/api/ask", { ...requestBody(), question });
-        $("answer").innerHTML = response.answer.map((line) => `<div class="note">${line}</div>`).join("");
-      } catch (error) {
-        $("answer").innerHTML = `<div class="warning">${error.message}</div>`;
-      } finally {
-        $("ask").disabled = false;
-      }
-    }
-
     async function boot() {
       const meta = await fetch("/api/metadata").then((res) => res.json());
       fillSelect("carrier", meta.carrier_types || [], "liposome");
@@ -996,7 +968,6 @@ HTML = r"""<!doctype html>
     }
 
     $("run").addEventListener("click", run);
-    $("ask").addEventListener("click", askModel);
     $("saveScenario").addEventListener("click", saveScenario);
     $("clearScenarios").addEventListener("click", clearScenarios);
     $("downloadCsv").addEventListener("click", downloadCsv);
@@ -1363,70 +1334,6 @@ def free_curve_response(package: dict, payload: dict) -> dict:
     }
 
 
-def ask_response(package: dict, payload: dict) -> dict:
-    question = str(payload.get("question") or "").strip()
-    if not question:
-        return {"answer": ["Enter a question about the current condition."]}
-
-    base = predict_response(package, payload)
-    base_prediction = base["prediction"]
-    candidates = []
-
-    def trial(label: str, changes: dict) -> None:
-        trial_payload = dict(payload)
-        trial_payload.update(changes)
-        try:
-            result = predict_response(package, trial_payload)
-        except ValueError:
-            return
-        candidates.append(
-            {
-                "label": label,
-                "prediction": result["prediction"],
-                "delta": result["prediction"] - base_prediction,
-            }
-        )
-
-    ph = to_float(payload.get("ph"), 7.4)
-    size = to_float(payload.get("particle_size_nm"))
-    temp = to_float(payload.get("temperature_C"))
-    loading = to_float(payload.get("drug_loading_content_percent"))
-    zeta = to_float(payload.get("zeta_potential_mv"))
-
-    if ph is not None:
-        trial("lower pH by 1.0", {"ph": max(0.0, ph - 1.0)})
-        trial("raise pH by 1.0", {"ph": min(14.0, ph + 1.0)})
-    if size is not None:
-        trial("reduce particle size by 20%", {"particle_size_nm": max(1.0, size * 0.8)})
-        trial("increase particle size by 20%", {"particle_size_nm": min(5000.0, size * 1.2)})
-    if temp is not None:
-        trial("raise temperature by 5 C", {"temperature_C": min(100.0, temp + 5.0)})
-    if loading is not None:
-        trial("raise drug loading by 20% relative", {"drug_loading_content_percent": min(100.0, loading * 1.2)})
-    if zeta is not None and zeta != 0:
-        trial("increase absolute zeta by 20%", {"zeta_potential_mv": max(-250.0, min(250.0, zeta * 1.2))})
-
-    ranked = sorted(candidates, key=lambda item: item["delta"], reverse=True)
-    positive = [item for item in ranked if item["delta"] > 0.25]
-    answer = [
-        f"Current prediction is {base_prediction:.1f}% at {payload.get('time_h')} h.",
-    ]
-    if positive:
-        best = positive[0]
-        answer.append(f"Within this integrated nanocarrier model, the strongest tested lever is to {best['label']}: predicted release changes by {best['delta']:+.1f} percentage points.")
-        if len(positive) > 1:
-            second = positive[1]
-            answer.append(f"The next candidate is to {second['label']}: {second['delta']:+.1f} percentage points.")
-    elif "increase" in question.lower() or "올" in question or "높" in question:
-        answer.append("The tested local changes did not clearly increase release; the model is likely relying on drug identity/time rather than a controllable input nearby.")
-    else:
-        answer.append("I compared local what-if changes for pH, particle size, temperature, loading, and zeta potential against the current prediction.")
-        for item in ranked[:3]:
-            answer.append(f"{item['label']}: {item['delta']:+.1f} percentage points.")
-    answer.append("Treat this as screening guidance, not an experimental guarantee; formulation-specific validation is still needed.")
-    return {"answer": answer, "what_if": ranked}
-
-
 class RFShapHandler(BaseHTTPRequestHandler):
     package: dict | None = None
     summary: dict | None = None
@@ -1460,15 +1367,13 @@ class RFShapHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
-        if path not in {"/api/predict", "/api/curve", "/api/free-curve", "/api/ask"}:
+        if path not in {"/api/predict", "/api/curve", "/api/free-curve"}:
             self.send_error(404)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
-            if path == "/api/ask":
-                self.send_json(ask_response(self.package, payload))
-            elif path == "/api/free-curve":
+            if path == "/api/free-curve":
                 self.send_json(free_curve_response(self.package, payload))
             elif path == "/api/curve":
                 self.send_json(curve_response(self.package, payload))
