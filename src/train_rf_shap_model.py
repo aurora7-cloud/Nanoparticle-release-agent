@@ -26,9 +26,7 @@ TARGET = "drug_release_percent"
 BASE_NUMERIC_FEATURES = [
     "particle_size_nm",
     "zeta_potential_mv",
-    "pdi",
     "ph",
-    "temperature_C",
     "time_h",
     "drug_loading_content_percent",
     "encapsulation_efficiency_percent",

@@ -421,15 +421,9 @@ HTML = r"""<!doctype html>
       </div>
       <div class="grid-2">
         <div class="field">
-          <label for="pdi">PDI</label>
-          <input id="pdi" type="number" value="0.2" step="0.001" min="0" max="20" />
-        </div>
-        <div class="field">
           <label for="ph">pH</label>
           <input id="ph" type="number" value="5.5" step="0.1" min="0" max="14" />
         </div>
-      </div>
-      <div class="grid-2">
         <div class="field">
           <label for="time">Focus time h</label>
           <input id="time" type="number" value="24" step="1" min="0" max="10000" />
@@ -530,7 +524,6 @@ HTML = r"""<!doctype html>
     const limits = {
       size: [1, 5000, "Size must be between 1 and 5000 nm."],
       zeta: [-250, 250, "Zeta potential must be between -250 and 250 mV."],
-      pdi: [0, 20, "PDI cannot be negative. This app allows 0-20 because some papers report PDI-like values as percent."],
       ph: [0, 14, "pH must be between 0 and 14."],
       time: [0, 10000, "Time cannot be negative or above 10000 h."],
       loading: [0, 100, "Drug loading percent must be 0-100."],
@@ -556,9 +549,7 @@ HTML = r"""<!doctype html>
         release_medium: $("medium").value,
         particle_size_nm: num("size"),
         zeta_potential_mv: num("zeta"),
-        pdi: num("pdi"),
         ph: num("ph"),
-        temperature_C: 37,
         time_h: timeOverride === null ? num("time") : timeOverride,
         drug_loading_content_percent: num("loading"),
         encapsulation_efficiency_percent: num("ee")
@@ -993,9 +984,7 @@ def to_float(value, default=None):
 INPUT_LIMITS = {
     "particle_size_nm": (1.0, 5000.0, "particle size must be between 1 and 5000 nm"),
     "zeta_potential_mv": (-250.0, 250.0, "zeta potential must be between -250 and 250 mV"),
-    "pdi": (0.0, 20.0, "PDI cannot be negative and must be 20 or lower"),
     "ph": (0.0, 14.0, "pH must be between 0 and 14"),
-    "temperature_C": (0.0, 100.0, "temperature must be between 0 and 100 C"),
     "time_h": (0.0, 10000.0, "time must be between 0 and 10000 h"),
     "drug_loading_content_percent": (0.0, 100.0, "drug loading percent must be 0-100"),
     "encapsulation_efficiency_percent": (0.0, 100.0, "encapsulation efficiency percent must be 0-100"),
@@ -1023,9 +1012,7 @@ def query_frame(payload: dict) -> pd.DataFrame:
         "release_medium": str(release_medium or "unknown"),
         "particle_size_nm": to_float(payload.get("particle_size_nm")),
         "zeta_potential_mv": to_float(payload.get("zeta_potential_mv")),
-        "pdi": to_float(payload.get("pdi")),
         "ph": to_float(payload.get("ph"), 7.4),
-        "temperature_C": to_float(payload.get("temperature_C")),
         "time_h": max(0.0, to_float(payload.get("time_h"), 0.0)),
         "drug_loading_content_percent": to_float(payload.get("drug_loading_content_percent")),
         "encapsulation_efficiency_percent": to_float(payload.get("encapsulation_efficiency_percent")),
@@ -1110,7 +1097,7 @@ def free_reference_payload(training: pd.DataFrame, payload: dict) -> tuple[dict 
         "encapsulation_efficiency_percent": None,
     }
     message = (
-        f"Free reference uses {carrier_type} evidence; size, zeta, PDI, loading, and EE are fixed as not applicable."
+        f"Free reference uses {carrier_type} evidence; size, zeta, loading, and EE are fixed as not applicable."
     )
     return free_payload, free_rows, message
 

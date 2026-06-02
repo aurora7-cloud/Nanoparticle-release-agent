@@ -6,91 +6,91 @@
     "rows": 1481,
     "curves": 156,
     "papers": 36,
-    "group_cv_rmse": 15.248280715442135,
-    "group_cv_mae": 11.037246621444819,
-    "group_cv_r2": 0.7241398625001794
+    "group_cv_rmse": 15.454664370214841,
+    "group_cv_mae": 11.21523973825667,
+    "group_cv_r2": 0.7166218589583739
   },
-  "oob_score": 0.9006971416950581,
+  "oob_score": 0.8962683970584561,
   "global_shap_top20": [
     {
       "feature": "log_time_h",
-      "mean_abs_shap": 4.9124649788270585
+      "mean_abs_shap": 5.130846937478112
     },
     {
       "feature": "sqrt_time_h",
-      "mean_abs_shap": 4.900449375757835
+      "mean_abs_shap": 4.7442639817144086
     },
     {
       "feature": "time_h",
-      "mean_abs_shap": 4.721322286676162
+      "mean_abs_shap": 4.726014235136683
     },
     {
       "feature": "encapsulation_efficiency_percent",
-      "mean_abs_shap": 2.387897810884538
+      "mean_abs_shap": 2.3892229888282555
     },
     {
       "feature": "zeta_stability_abs_mv",
-      "mean_abs_shap": 2.34159015393864
-    },
-    {
-      "feature": "acidic_trigger_7_4",
-      "mean_abs_shap": 2.1375583068355635
-    },
-    {
-      "feature": "ph",
-      "mean_abs_shap": 2.133817696185481
-    },
-    {
-      "feature": "surface_area_proxy_inv_nm",
-      "mean_abs_shap": 1.9621092475097106
+      "mean_abs_shap": 2.3515885477459806
     },
     {
       "feature": "particle_size_nm",
-      "mean_abs_shap": 1.8914299225293263
+      "mean_abs_shap": 2.189257310993605
+    },
+    {
+      "feature": "acidic_trigger_7_4",
+      "mean_abs_shap": 2.147481665534439
+    },
+    {
+      "feature": "ph",
+      "mean_abs_shap": 2.14085068627859
+    },
+    {
+      "feature": "surface_area_proxy_inv_nm",
+      "mean_abs_shap": 1.9308740138819829
     },
     {
       "feature": "loading_gradient_proxy",
-      "mean_abs_shap": 1.1756061825840411
+      "mean_abs_shap": 1.2172359220660924
     },
     {
       "feature": "drug_loading_content_percent",
-      "mean_abs_shap": 1.0923828469892953
+      "mean_abs_shap": 1.1637460453276802
     },
     {
       "feature": "zeta_potential_mv",
-      "mean_abs_shap": 1.05868306663984
+      "mean_abs_shap": 1.1232039440682229
     },
     {
       "feature": "carrier_type_liposome",
-      "mean_abs_shap": 1.0430021852147833
+      "mean_abs_shap": 0.9673691565647162
     },
     {
       "feature": "carrier_type_free drug solution",
-      "mean_abs_shap": 0.713019506346274
-    },
-    {
-      "feature": "pdi",
-      "mean_abs_shap": 0.6229126696439784
+      "mean_abs_shap": 0.770231738349425
     },
     {
       "feature": "drug_name_carvacrol",
-      "mean_abs_shap": 0.5596468149495798
+      "mean_abs_shap": 0.4555185867053203
     },
     {
       "feature": "drug_name_Paclitaxel",
-      "mean_abs_shap": 0.3234866761708992
+      "mean_abs_shap": 0.37119884924171626
     },
     {
       "feature": "drug_name_Cytarabine",
-      "mean_abs_shap": 0.26331556295392616
-    },
-    {
-      "feature": "release_medium_PBS",
-      "mean_abs_shap": 0.25282957122041794
+      "mean_abs_shap": 0.3239062532712804
     },
     {
       "feature": "carrier_family_chitosan",
-      "mean_abs_shap": 0.23040798815565147
+      "mean_abs_shap": 0.2745200859282222
+    },
+    {
+      "feature": "release_medium_phosphate buffer",
+      "mean_abs_shap": 0.26808777772252546
+    },
+    {
+      "feature": "carrier_type_PLGA nanoparticle",
+      "mean_abs_shap": 0.2482224408310234
     }
   ],
   "theory_notes": {
